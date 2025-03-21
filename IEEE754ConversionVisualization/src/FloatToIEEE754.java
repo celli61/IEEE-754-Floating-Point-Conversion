@@ -1,7 +1,8 @@
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Scanner;
 
-public class Main {
+public class FloatToIEEE754 {
     public static void main(String[] args) throws Exception {
         Scanner scan = new Scanner(System.in);
 
@@ -22,17 +23,15 @@ public class Main {
         }
         
         //get whole number portion of the float by indexing string and typecasting (all numbers before "." as an int)
-        int wholeNum = Integer.parseInt(floatPointString.substring(0, floatPointString.indexOf('.')));
-        System.out.println("Whole number portion of input: "+ wholeNum);
+        int wholePart = Integer.parseInt(floatPointString.substring(0, floatPointString.indexOf('.')));
+        System.out.println("Whole number portion of input: "+ wholePart);
         //convert the whole number integer to a binary string through Java 
-        String wholeNumBinary = Integer.toBinaryString(wholeNum);
+        String wholeNumBinary = Integer.toBinaryString(Math.abs(wholePart));
         System.out.println("Whole number portion of input in binary: " + wholeNumBinary);
 
-        //get decimal portion of the float as a double using substring and logical indexing with typecasting 
-        String decimalNum = floatPointString.substring(floatPointString.indexOf('.') + 1, floatPointString.length());
-        //convert from string to decimal form by casting to an int and shifting decimal place with multiplication
-        double decimalNumConvert = (double) ((Integer.parseInt(decimalNum)) * Math.pow(10, -(decimalNum.length())));
-        System.out.println("Decimal portion of input: " + decimalNumConvert);
+        //get decimal portion of the float as a BigDecimal to prevent floating point precision issues
+        BigDecimal decimalPart = new BigDecimal(floatPointString).remainder(BigDecimal.ONE);
+        System.out.println("Decimal portion of input: " + decimalPart);
 
 
         //convert from decimal form to binary string with a for loop and a string builder
@@ -41,13 +40,11 @@ public class Main {
 
         //use a for loop to loop a maximum of 23 times to generate the binary string for the decimal input
         for(int i = 0; i < 23; i++) {
-            //if decimal number is 0.0, break loop
-            if(decimalNumConvert == 0.0) break;
-            //multiply decimal value by 2 and get leading digit
-            decimalNumConvert *= 2;
-            int leadingDigit = (int)(decimalNumConvert);
-            decimalNumBinaryBuilder.append(leadingDigit);
-            decimalNumConvert = decimalNumConvert % 1;
+            if (decimalPart.compareTo(BigDecimal.ZERO) == 0) break; 
+            decimalPart = decimalPart.multiply(BigDecimal.valueOf(2)); 
+            int bit = Math.abs(decimalPart.intValue());
+            decimalNumBinaryBuilder.append(bit);
+            decimalPart = decimalPart.remainder(BigDecimal.ONE);
         }
         String decimalNumBinary = decimalNumBinaryBuilder.toString();
         System.out.println("Decimal portion of input in binary: " + decimalNumBinary);
@@ -67,22 +64,40 @@ public class Main {
 
         /*get final binary string for mantissa by taking the substring of the 
         * combined whole and decimal binary strings after the first occurrence of 1 to the end*/
-        String mantissaBinary = wholeAndDecimalNumBinary.substring(wholeNumBinary.indexOf('1') + 1);
-        //check length of binary string and increase/decrease to 23
-        if(mantissaBinary.length() < 23) {
-            mantissaBinary = mantissaBinary + "0".repeat(23 - mantissaBinary.length());
+        String mantissaBinary;
+        if (wholePart != 0) {
+            mantissaBinary = wholeAndDecimalNumBinary.substring(1); // Remove leading 1
         } else {
-            mantissaBinary = mantissaBinary.substring(0, 23);
+            mantissaBinary = decimalNumBinary.substring(decimalNumBinary.indexOf("1") + 1);
+        }
+
+        //normalize length of mantissa to 23 floating-point rounding (down) with or padding with 0s (up)
+        if (mantissaBinary.length() > 23) {
+            //24th bit is guard bit
+            if (mantissaBinary.charAt(23) == '1') {
+                //if 1, round to nearest
+                //convert binary string to int with BigInteger
+                BigInteger mantissaInt = new BigInteger(mantissaBinary.substring(0, 23), 2);
+                //increment int by 1
+                mantissaInt = mantissaInt.add(BigInteger.ONE);
+                //store int as binary string again with BigInt toString, replacing spaces with 0s
+                mantissaBinary = String.format("%23s", mantissaInt.toString(2)).replace(' ', '0');
+            } else {
+                //if 0, simply truncate
+                mantissaBinary = mantissaBinary.substring(0, 23);
+            }
+        } else {
+            //if less than 23 bits, pad with 0s
+            mantissaBinary = mantissaBinary + "0".repeat(23 - mantissaBinary.length());
         }
         System.out.println("Binary string for mantissa: " + mantissaBinary);
-        System.out.println("Binary string for mantissa length: " + mantissaBinary.length());
 
 
         //create string builder for final binary string
         StringBuilder IEEE754BinaryBuilder = new StringBuilder();
 
         //assign sign bit based off stored whole number of input
-        if(wholeNum < 0) {
+        if(wholePart < 0) {
             IEEE754BinaryBuilder.append("1");
         } else {
             IEEE754BinaryBuilder.append("0");
