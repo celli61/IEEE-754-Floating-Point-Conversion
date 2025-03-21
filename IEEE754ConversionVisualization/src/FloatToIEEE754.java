@@ -4,6 +4,9 @@ import java.math.BigInteger;
 public class FloatToIEEE754 {
 
     public static String convertFloatToIEEE754(String floatString) {
+        //handle special case of "0.0"
+        if (new BigDecimal(floatString).compareTo(BigDecimal.ZERO) == 0) return "0 00000000 00000000000000000000000";
+        
         //get whole portion of the float as a BigInteger 
         BigInteger wholePart = BigInteger.ZERO;
         if(floatString.contains(".")){
@@ -20,7 +23,7 @@ public class FloatToIEEE754 {
         //build decimal part binary string 
         StringBuilder decimalPartBinaryBuilder = new StringBuilder();
         //iterate 25 times to allow extra bits for rounding if applicable
-        for(int i = 0; i < 25; i++) {
+        for(int i = 0; i < 30; i++) {
             //if the decimal part is 0, break
             if (decimalPart.equals(BigDecimal.ZERO)) break; 
             //multiply decimal value by 2
@@ -36,10 +39,22 @@ public class FloatToIEEE754 {
         //append whole and decimal part binary strings together
         String wholePlusDecimalBinary = wholePartBinary + decimalPartBinary;
 
-        /*determine exponent size by subtracting the length of the substring from 0 to the first occurrence of "1" from the length of 
-        the entire whole num binary string */
-        int exponentValue = wholePartBinary.length() - wholePartBinary.substring(0, wholePartBinary.indexOf('1') + 1).length();
-
+        //determine exponent size
+        int exponentValue;
+        if(!wholePart.equals(BigInteger.ZERO)) {
+            //set value to length of whole part binary - the index of the first "1" - 1
+            exponentValue = wholePartBinary.length() - wholePartBinary.indexOf('1') - 1;
+        } else {
+            //if there is no "1" in the decimal part
+            if(decimalPartBinary.indexOf('1') == -1) {
+                //input is 0
+                exponentValue = 0;
+            } else {
+                //exponent is negative based off index of first "1"
+                exponentValue = -(decimalPartBinary.indexOf('1') + 1);
+            }
+        }
+        System.out.println(exponentValue);
         //store mantissa bits in a new string
         String mantissaBinary;
         //if the whole part of the float is not 0
@@ -60,7 +75,6 @@ public class FloatToIEEE754 {
                 //increment int by 1
                 mantissaInt = mantissaInt.add(BigInteger.ONE);
                 //store int as binary string again with BigInt toString, replacing spaces with 0s
-                System.out.println(mantissaInt.toString(2));
                 mantissaBinary = String.format("%23s", mantissaInt.toString(2)).replace(' ', '0');
             } else {
                 //if 0, simply truncate
@@ -85,7 +99,8 @@ public class FloatToIEEE754 {
         IEEE754BinaryBuilder.append(" ");
 
         //calculate the binary string for the exponent bits and append to final binary string
-        String exponentBinary = Integer.toBinaryString(exponentValue + 127);
+        String exponentBinary = String.format("%8s", Integer.toBinaryString(exponentValue + 127)).replace(' ', '0');
+
         IEEE754BinaryBuilder.append(exponentBinary);
 
         IEEE754BinaryBuilder.append(" ");
