@@ -1,8 +1,4 @@
-import java.awt.BorderLayout;
-import java.awt.Button;
-import java.awt.Color;
 import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.math.BigDecimal;
@@ -64,8 +60,6 @@ public class MainWindow {
 
         frame.add(inputPanel);
         frame.add(outputPanel);
-
-        show();
     }
 
     public void show() {
