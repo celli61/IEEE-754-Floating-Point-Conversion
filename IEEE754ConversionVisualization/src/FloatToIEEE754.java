@@ -54,7 +54,6 @@ public class FloatToIEEE754 {
                 exponentValue = -(decimalPartBinary.indexOf('1') + 1);
             }
         }
-        System.out.println(exponentValue);
         //store mantissa bits in a new string
         String mantissaBinary;
         //if the whole part of the float is not 0
@@ -95,15 +94,10 @@ public class FloatToIEEE754 {
             IEEE754BinaryBuilder.append("0");
         }
 
-        //add a space to final string to show different parts of binary representation
-        IEEE754BinaryBuilder.append(" ");
-
         //calculate the binary string for the exponent bits and append to final binary string
         String exponentBinary = String.format("%8s", Integer.toBinaryString(exponentValue + 127)).replace(' ', '0');
 
         IEEE754BinaryBuilder.append(exponentBinary);
-
-        IEEE754BinaryBuilder.append(" ");
 
         //finally, append the mantissa
         IEEE754BinaryBuilder.append(mantissaBinary);
