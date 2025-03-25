@@ -5,7 +5,7 @@ public class FloatToIEEE754 {
 
     public static String convertFloatToIEEE754(String floatString) {
         //handle special case of "0.0"
-        if (new BigDecimal(floatString).compareTo(BigDecimal.ZERO) == 0) return "0 00000000 00000000000000000000000";
+        if (new BigDecimal(floatString).compareTo(BigDecimal.ZERO) == 0) return "00000000000000000000000000000000";
         
         //get whole portion of the float as a BigInteger 
         BigInteger wholePart = BigInteger.ZERO;
@@ -18,7 +18,7 @@ public class FloatToIEEE754 {
         BigDecimal decimalPart = new BigDecimal(floatString).remainder(BigDecimal.ONE);
 
         //store whole part binary string from BigInteger toString
-        String wholePartBinary = wholePart.toString(2);
+        String wholePartBinary = wholePart.abs().toString(2);
 
         //build decimal part binary string 
         StringBuilder decimalPartBinaryBuilder = new StringBuilder();

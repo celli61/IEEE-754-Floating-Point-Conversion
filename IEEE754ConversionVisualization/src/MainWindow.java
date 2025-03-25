@@ -1,5 +1,6 @@
 import java.awt.event.ActionEvent;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 import javax.swing.*;
 
@@ -252,27 +253,30 @@ public class MainWindow extends JFrame {
     private void jButton1ActionPerformed(ActionEvent evt) {
         try {
             String floatString = jTextField4.getText();
-            //BigDecimal trueFloatVal = new BigDecimal(Float.toString(floatVal));
-            //BigDecimal inputVal = new BigDecimal(floatString);
-            //BigDecimal error = trueFloatVal.subtract(inputVal);
-            
+        
             String IEEE754BinaryString = FloatToIEEE754.convertFloatToIEEE754(floatString);
+
             float floatVal = Float.parseFloat(floatString);
-            String trueFloatVal = String.format("%.16f", floatVal);
-            BigDecimal error = new BigDecimal(trueFloatVal).subtract(new BigDecimal(floatString));
+            BigDecimal trueFloatVal = new BigDecimal(floatVal);
             
             jTextField1.setText(IEEE754BinaryString.substring(0, 1));
             jTextField2.setText(IEEE754BinaryString.substring(1, 9));
             jTextField3.setText(IEEE754BinaryString.substring(9));
 
-
-            
+            jTextField5.setText(trueFloatVal.toPlainString());
+            jTextField6.setText(trueFloatVal.subtract(new BigDecimal(floatString)).toPlainString());
             jTextField7.setText(IEEE754BinaryString);
-            jTextField5.setText(trueFloatVal);
-            jTextField6.setText(error.toPlainString());
+            jTextField8.setText(new BigInteger(IEEE754BinaryString, 2).toString(16).toUpperCase());
 
         } catch(NumberFormatException ex) {
-            jTextField7.setText("not a valid decimal string");
+            jTextField1.setText("");
+            jTextField2.setText("");
+            jTextField3.setText("");
+            jTextField4.setText("Not a valid decimal");
+            jTextField5.setText("");
+            jTextField6.setText("");
+            jTextField7.setText("");
+            jTextField8.setText("");
         }
     }
 }
